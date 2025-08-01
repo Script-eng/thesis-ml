@@ -1,1 +1,29 @@
-# Files to Ignore
+# Files to ignore
+.env
+.csv
+.html
+.htm
+__pycache__
+data/
+build/
+dist/
+main.spec
+error_log/
+
+todo.txt
+testdownloader.py
+testdownloader1.py
+
+# New files
+unsorted/
+venv/
+out.log
+app1.py
+.feather
+data_cache.feather
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.swp
+*.log

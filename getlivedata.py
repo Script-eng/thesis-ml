@@ -1,6 +1,6 @@
 import time
+import logging
 import datetime
-import traceback
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
@@ -11,13 +11,46 @@ from selenium.webdriver.support import expected_conditions as EC
 # --- CONFIGURATION ---
 TARGET_URL = "https://fib.co.ke/live-markets/"
 OUTPUT_FILENAME = ".rendered_stock_data.html"
-SCRAPE_INTERVAL_SECONDS = 40
+LOG_FILENAME = "getlivedata.log"  # New configuration for the log file
+SCRAPE_INTERVAL_SECONDS = 30
 RESTART_DELAY_SECONDS = 10
 
 
+# --- LOGGING SETUP ---
+def setup_logging():
+    """
+    Configures logging to output to both the console and a file.
+    """
+    # Define the format for the logs
+    log_formatter = logging.Formatter(
+        '%(asctime)s - %(levelname)s - %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S'
+    )
+    
+    # Get the root logger
+    logger = logging.getLogger()
+    logger.setLevel(logging.INFO)
+
+    # Prevent duplicate handlers if this function is called multiple times
+    if logger.hasHandlers():
+        logger.handlers.clear()
+
+    # 1. File Handler: to save logs to a file
+    file_handler = logging.FileHandler(LOG_FILENAME, mode='a', encoding='utf-8')
+    file_handler.setFormatter(log_formatter)
+    logger.addHandler(file_handler)
+
+    # 2. Console (Stream) Handler: to show logs in the console
+    console_handler = logging.StreamHandler()
+    console_handler.setFormatter(log_formatter)
+    logger.addHandler(console_handler)
+
+
 def setup_driver():
+    """Initializes and returns a headless Chrome WebDriver instance."""
     chrome_options = Options()
     chrome_options.add_argument("--headless=new")
+    # chrome_options.add_argument("--start-maximized")  # run chrome with gui
     chrome_options.add_argument("--window-size=1920,1080")
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
@@ -27,79 +60,83 @@ def setup_driver():
         "Chrome/130.0.6723.116 Safari/537.36"
     )
 
-    # Let Selenium find chromedriver from PATH
     try:
         driver = webdriver.Chrome(options=chrome_options)
-        print("✅ ChromeDriver initialized successfully.")
+        logging.info("ChromeDriver initialized successfully.")
         return driver
-    except Exception as e:
-        print("❌ Failed to initialize ChromeDriver.")
-        traceback.print_exc()
+    except Exception:
+        logging.exception("Failed to initialize ChromeDriver. Check if chromedriver is in your PATH or installed correctly.")
         raise
 
 
 def run_continuous_scraper(url: str, output_filename: str, interval: int):
-    print("\n--- Continuous Scraping Initialized ---")
-    print(f"Target: {url}")
-    print(f"Output: {output_filename}")
-    print(f"Interval: {interval} seconds")
-    print("Press Ctrl+C to stop.\n")
+    """
+    Main function to run the scraping loop.
+
+    Handles driver setup, page interaction, data extraction, and restarts.
+    """
+    logging.info("--- Continuous Scraping Initialized ---")
+    logging.info(f"Target URL: {url}")
+    logging.info(f"Output File: {output_filename}")
+    logging.info(f"Scrape Interval: {interval} seconds")
+    logging.info("Press Ctrl+C to stop the scraper.")
 
     driver = setup_driver()
     driver.get(url)
 
     try:
         while True:
-            cycle_start = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-            print(f"\n[{cycle_start}] 🔁 New scrape cycle...")
+            logging.info("Starting new scrape cycle...")
 
             try:
                 wait = WebDriverWait(driver, 20)
-                print("🔍 Locating iframe 'mslFrame0'...")
+                
+                logging.info("Locating and switching to iframe 'mslFrame0'.")
                 iframe = wait.until(EC.presence_of_element_located((By.ID, "mslFrame0")))
                 driver.switch_to.frame(iframe)
 
-                print("⏳ Waiting for data table inside iframe...")
+                logging.info("Waiting for data table to load inside the iframe.")
                 wait.until(EC.presence_of_element_located((By.TAG_NAME, "table")))
 
                 rendered_html = driver.page_source
                 with open(output_filename, "w", encoding="utf-8") as f:
                     f.write(rendered_html)
 
-                print(f"✅ Saved HTML to '{output_filename}'")
+                logging.info(f"Successfully saved rendered HTML to '{output_filename}'.")
 
             except Exception as e:
-                print(f"⚠️  Scrape cycle failed: {e}")
-                traceback.print_exc()
+                logging.error(f"A non-fatal error occurred during the scrape cycle: {e}")
+                logging.exception("Traceback for the scrape cycle failure:")
 
             finally:
                 driver.switch_to.default_content()
 
-            print(f"⏱ Waiting {interval} seconds...")
+            logging.info(f"Cycle complete. Waiting for {interval} seconds...\n")
             time.sleep(interval)
-            print("🔄 Refreshing page...")
+            
+            logging.info("Refreshing the page for the next cycle.")
             driver.refresh()
 
-    except KeyboardInterrupt:
-        print("\n🛑 Scraper interrupted by user.")
+    # except KeyboardInterrupt:
+    #     logging.warning("Scraper interrupted by user (Ctrl+C). Shutting down.")
     except Exception as e:
-        print(f"\n❌ Fatal error: {e}")
-        traceback.print_exc()
+        logging.critical(f"A fatal error occurred in the main scraper loop: {e}")
+        logging.exception("Traceback for the fatal error:")
         raise
     finally:
-        print("🔚 Closing browser...")
+        logging.info("Closing browser and quitting WebDriver.")
         driver.quit()
-        print("✅ Scraper shut down.")
+        logging.info("Scraper has been shut down.")
 
 
 if __name__ == "__main__":
+    setup_logging()
     while True:
         try:
             run_continuous_scraper(TARGET_URL, OUTPUT_FILENAME, SCRAPE_INTERVAL_SECONDS)
         except KeyboardInterrupt:
-            print("👋 Exiting by user request.")
+            logging.info("Exiting application by user request.")
             break
-        except Exception as e:
-            now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            print(f"\n[{now}] 💥 Scraper crashed. Restarting in {RESTART_DELAY_SECONDS} seconds...")
+        except Exception:
+            logging.error(f"Scraper crashed. Restarting in {RESTART_DELAY_SECONDS} seconds...")
             time.sleep(RESTART_DELAY_SECONDS)

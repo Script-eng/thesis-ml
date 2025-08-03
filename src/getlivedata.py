@@ -7,43 +7,19 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+import os
+from dotenv import load_dotenv
+from utilities import setup_logging
 
+
+load_dotenv()
 # --- CONFIGURATION ---
-TARGET_URL = "https://fib.co.ke/live-markets/"
-OUTPUT_FILENAME = ".rendered_stock_data.html"
-LOG_FILENAME = "getlivedata.log"  # New configuration for the log file
-SCRAPE_INTERVAL_SECONDS = 30
-RESTART_DELAY_SECONDS = 10
+TARGET_URL = os.getenv("TARGET_URL")
+OUTPUT_FILENAME = os.getenv("OUTPUT_FILENAME")
+LOG_FILENAME = os.getenv("GETLIVEDATA_LOG_FILENAME")
+SCRAPE_INTERVAL_SECONDS = int(os.getenv("SCRAPE_INTERVAL_SECONDS", 30))
+RESTART_DELAY_SECONDS = int(os.getenv("RESTART_DELAY_SECONDS", 10))
 
-
-# --- LOGGING SETUP ---
-def setup_logging():
-    """
-    Configures logging to output to both the console and a file.
-    """
-    # Define the format for the logs
-    log_formatter = logging.Formatter(
-        '%(asctime)s - %(levelname)s - %(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S'
-    )
-    
-    # Get the root logger
-    logger = logging.getLogger()
-    logger.setLevel(logging.INFO)
-
-    # Prevent duplicate handlers if this function is called multiple times
-    if logger.hasHandlers():
-        logger.handlers.clear()
-
-    # 1. File Handler: to save logs to a file
-    file_handler = logging.FileHandler(LOG_FILENAME, mode='a', encoding='utf-8')
-    file_handler.setFormatter(log_formatter)
-    logger.addHandler(file_handler)
-
-    # 2. Console (Stream) Handler: to show logs in the console
-    console_handler = logging.StreamHandler()
-    console_handler.setFormatter(log_formatter)
-    logger.addHandler(console_handler)
 
 
 def setup_driver():
@@ -130,7 +106,7 @@ def run_continuous_scraper(url: str, output_filename: str, interval: int):
 
 
 if __name__ == "__main__":
-    setup_logging()
+    setup_logging(LOG_FILENAME)
     while True:
         try:
             run_continuous_scraper(TARGET_URL, OUTPUT_FILENAME, SCRAPE_INTERVAL_SECONDS)

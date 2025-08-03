@@ -27,3 +27,6 @@ data_cache.feather
 *.bak
 *.swp
 *.log
+
+# Recent edits
+.rendered_stock_data.html

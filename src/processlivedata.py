@@ -5,36 +5,25 @@ import psycopg2
 from psycopg2 import OperationalError, Error
 import pandas as pd
 from bs4 import BeautifulSoup
+import os
+from dotenv import load_dotenv
+from utilities import setup_logging
 
 # --- CONFIGURATION ---
-DB_CONFIG = {
-    "dbname": "nse",
-    "user": "postgres",
-    "password": "secret", # Your Docker password
-    "host": "localhost",  # Use the service name from docker-compose
-    "port": "5432"
-}
-TABLE_NAME = "stocksdata" # The new hypertable
-HTML_FILE_PATH = ".rendered_stock_data.html"
-LOG_FILENAME = "etl_timescale.log"
-PROCESSING_INTERVAL_SECONDS = 30
+load_dotenv()
 
-# --- LOGGING SETUP ---
-def setup_logging():
-    """Configures logging to output to both the console and a file."""
-    log_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
-    logger = logging.getLogger()
-    logger.setLevel(logging.INFO)
-    if logger.hasHandlers():
-        logger.handlers.clear()
-    # File Handler
-    file_handler = logging.FileHandler(LOG_FILENAME, mode='a', encoding='utf-8')
-    file_handler.setFormatter(log_formatter)
-    logger.addHandler(file_handler)
-    # Console Handler
-    console_handler = logging.StreamHandler()
-    console_handler.setFormatter(log_formatter)
-    logger.addHandler(console_handler)
+DB_CONFIG = {
+    "dbname": os.getenv("DB_NAME"),
+    "user": os.getenv("DB_USER"),
+    "password": os.getenv("DB_PASSWORD"),
+    "host": os.getenv("DB_HOST"),
+    "port": os.getenv("DB_PORT")
+}
+TABLE_NAME = os.getenv("TABLE_NAME")
+HTML_FILE_PATH = os.getenv("HTML_FILE_PATH")
+LOG_FILENAME = os.getenv("LOG_FILENAME")
+PROCESSING_INTERVAL_SECONDS = int(os.getenv("PROCESSING_INTERVAL_SECONDS", "30"))
+
 
 # --- PARSE & TRANSFORM FUNCTION (Identical to your original) ---
 def parse_local_html_file(html_filepath: str):
@@ -43,7 +32,7 @@ def parse_local_html_file(html_filepath: str):
         with open(html_filepath, "r", encoding="utf-8") as f:
             html_content = f.read()
     except FileNotFoundError:
-        logging.warning(f"HTML file '{html_filepath}' not found. Waiting for scraper to create it.")
+        logging.warning(f"HTML file '{html_filepath}' not found. Waiting for GETLIVEDATA.PY to create it.")
         return None
     soup = BeautifulSoup(html_content, "html.parser")
     data_table = soup.find("table", id="board_table")
@@ -70,10 +59,11 @@ def parse_local_html_file(html_filepath: str):
     df = pd.DataFrame(all_stocks_data)
     def clean_volume(v_str):
         v_str = v_str.lower().replace(',', '')
-        if 'm' in v_str: return float(v_str.replace('m', '')) * 1_000_000
-        if 'k' in v_str: return float(v_str.replace('k', '')) * 1_000
+        if 'm' in v_str: return float(v_str.replace('m', '')) * 1_000_000 # Convert millions to absolute value
+        if 'k' in v_str: return float(v_str.replace('k', '')) * 1_000 # Convert thousands to absolute value
         return pd.to_numeric(v_str, errors='coerce')
-    df['VOLUME'] = df['VOLUME'].apply(clean_volume).fillna(0).astype(int)
+    
+    df['VOLUME'] = df['VOLUME'].apply(clean_volume).fillna(0).astype(int) 
     numeric_cols = ['PREV_CLOSE', 'LATEST_PRICE', 'CHANGE_ABS', 'HIGH', 'LOW', 'AVG_PRICE']
     for col in numeric_cols:
         df[col] = pd.to_numeric(df[col], errors='coerce')
@@ -88,7 +78,7 @@ def parse_local_html_file(html_filepath: str):
 # --- DATABASE INSERT FUNCTION ---
 def insert_stock_data(conn, df):
     """Inserts new stock data records into the TimescaleDB hypertable."""
-    # Note the change in columns to match our new table schema
+
     insert_query = f"""
     INSERT INTO {TABLE_NAME} (time, symbol, name, latest_price, prev_close, change_abs, change_pct, change_direction, high, low, avg_price, volume, trade_time)
     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
@@ -144,7 +134,7 @@ def main_etl_cycle():
 
 
 if __name__ == "__main__":
-    setup_logging()
+    setup_logging(LOG_FILENAME)
     logging.info("--- Continuous TimescaleDB ETL Process Started ---")
     logging.info(f"Watching '{HTML_FILE_PATH}' and loading to DB every {PROCESSING_INTERVAL_SECONDS} seconds.")
     logging.info("Press Ctrl+C to stop.")
@@ -152,7 +142,7 @@ if __name__ == "__main__":
     try:
         while True:
             main_etl_cycle()
-            logging.info(f"--- Cycle complete. Waiting for {PROCESSING_INTERVAL_SECONDS} seconds... ---")
+            logging.info(f"--- Cycle complete. Waiting for {PROCESSING_INTERVAL_SECONDS} seconds... ---\n")
             time.sleep(PROCESSING_INTERVAL_SECONDS)
     except KeyboardInterrupt:
         logging.warning("Process stopped by user. Exiting.")

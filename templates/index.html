@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>NSE Market Data (Sticky Column)</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>NSE Market Data</h1>
+      <div id="status-bar">
+        <div id="last-updated">Connecting...</div>
+      </div>
+    </header>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Security</th>
+            <th>Prev Close</th>
+            <th>Latest Price</th>
+            <th>Change</th>
+            <th>% Change</th>
+            <th>High</th>
+            <th>Low</th>
+            <th>Avg Price</th>
+            <th>Volume</th>
+            <th>Time</th>
+          </tr>
+        </thead>
+        <tbody id="stock-data-body">
+          <!-- Data will be populated here by JavaScript -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+    <footer style="background: #222; color: #fff; text-align: center; padding: 1rem 0; margin-top: 2rem; font-size: 0.95rem;">
+        <p>
+            A generous offering from 
+            <a href="https://www.softwarepulses.com" target="_blank" style="color: #4fc3f7; text-decoration: underline;">
+                Software Pulses
+            </a>. All rights reserved.
+        </p>
+    </footer>
+<script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,100 @@
+/* --- CSS VARIABLES & BASE STYLES --- */
+    :root {
+      --bg: #f4f6f9;
+      --header-bg: #00458b;
+      --border-color: #dee2e6;
+      --header-highlight-bg: #e9ecef;
+      --row-hover-bg: #f1f1f1;
+      --row-bg: #fff;
+    }
+
+    body {
+      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Arial, sans-serif;
+      background-color: var(--bg);
+      margin: 0;
+      padding: 20px;
+      color: #333;
+    }
+
+    .container {
+      max-width: 1300px;
+      margin: auto;
+      background: var(--row-bg);
+      border-radius: 10px;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.06);
+      overflow: hidden;
+    }
+
+    header {
+      background-color: var(--header-bg);
+      color: white;
+      padding: 20px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 3px solid #003b72;
+    }
+
+    header h1 { font-size: 1.6rem; margin: 0; }
+    #status-bar { text-align: right; font-size: 0.95rem; }
+    
+    .table-wrapper {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.95rem;
+    }
+
+    thead {
+      background-color: var(--header-highlight-bg);
+    }
+
+    th, td {
+      padding: 14px 16px;
+      text-align: left;
+      border-bottom: 1px solid var(--border-color);
+      white-space: nowrap;
+    }
+
+    tbody tr:hover td { /* Apply hover bg to all cells in the row */
+      background-color: var(--row-hover-bg);
+    }
+    
+    .price-up { color: #28a745; font-weight: 500; }
+    .price-down { color: #dc3545; font-weight: 500; }
+    .price-neutral { color: #6c757d; }
+
+    .status-message { text-align: center; padding: 24px; font-style: italic; color: #666; }
+    
+    /* --- STICKY FIRST COLUMN --- */
+    th:first-child,
+    td:first-child {
+      position: -webkit-sticky; /* For Safari */
+      position: sticky;
+      left: 0;
+      z-index: 2; /* Ensures it's above other cells */
+      background-color: var(--header-highlight-bg); /* Match header bg */
+    }
+    
+    td:first-child {
+      background-color: var(--row-bg); /* Match row bg */
+      font-weight: bold;
+    }
+
+    /* Ensure the hover state works correctly with the sticky column */
+    tbody tr:hover td:first-child {
+        background-color: var(--row-hover-bg);
+    }
+
+    /* --- RESPONSIVE OPTIMIZATIONS --- */
+    @media (max-width: 768px) {
+      body { padding: 10px; }
+      header { flex-direction: column; align-items: flex-start; gap: 10px; }
+      th, td { padding: 10px 12px; }
+      header h1 { font-size: 1.3rem; }
+      #status-bar { font-size: 0.9rem; }
+    }

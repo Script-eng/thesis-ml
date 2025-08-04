@@ -9,7 +9,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import os
 from dotenv import load_dotenv
-from utilities import setup_logging
+# from utilities import setup_logging
 
 
 load_dotenv()
@@ -105,14 +105,14 @@ def run_continuous_scraper(url: str, output_filename: str, interval: int):
         logging.info("Scraper has been shut down.")
 
 
-if __name__ == "__main__":
-    setup_logging(LOG_FILENAME)
-    while True:
-        try:
-            run_continuous_scraper(TARGET_URL, OUTPUT_FILENAME, SCRAPE_INTERVAL_SECONDS)
-        except KeyboardInterrupt:
-            logging.info("Exiting application by user request.")
-            break
-        except Exception:
-            logging.error(f"Scraper crashed. Restarting in {RESTART_DELAY_SECONDS} seconds...")
-            time.sleep(RESTART_DELAY_SECONDS)
+# if __name__ == "__main__":
+#     setup_logging(LOG_FILENAME)
+#     while True:
+#         try:
+#             run_continuous_scraper(TARGET_URL, OUTPUT_FILENAME, SCRAPE_INTERVAL_SECONDS)
+#         except KeyboardInterrupt:
+#             logging.info("Exiting application by user request.")
+#             break
+#         except Exception:
+#             logging.error(f"Scraper crashed. Restarting in {RESTART_DELAY_SECONDS} seconds...")
+#             time.sleep(RESTART_DELAY_SECONDS)

@@ -7,7 +7,7 @@ import pandas as pd
 from bs4 import BeautifulSoup
 import os
 from dotenv import load_dotenv
-from utilities import setup_logging
+# from utilities import setup_logging
 
 # --- CONFIGURATION ---
 load_dotenv()
@@ -133,18 +133,18 @@ def main_etl_cycle():
             logging.info("Database connection closed for this cycle.")
 
 
-if __name__ == "__main__":
-    setup_logging(LOG_FILENAME)
-    logging.info("--- Continuous TimescaleDB ETL Process Started ---")
-    logging.info(f"Watching '{HTML_FILE_PATH}' and loading to DB every {PROCESSING_INTERVAL_SECONDS} seconds.")
-    logging.info("Press Ctrl+C to stop.")
+# if __name__ == "__main__":
+#     setup_logging(LOG_FILENAME)
+#     logging.info("--- Continuous TimescaleDB ETL Process Started ---")
+#     logging.info(f"Watching '{HTML_FILE_PATH}' and loading to DB every {PROCESSING_INTERVAL_SECONDS} seconds.")
+#     logging.info("Press Ctrl+C to stop.")
 
-    try:
-        while True:
-            main_etl_cycle()
-            logging.info(f"--- Cycle complete. Waiting for {PROCESSING_INTERVAL_SECONDS} seconds... ---\n")
-            time.sleep(PROCESSING_INTERVAL_SECONDS)
-    except KeyboardInterrupt:
-        logging.warning("Process stopped by user. Exiting.")
-    except Exception:
-        logging.critical("An unexpected critical error occurred in the main loop.", exc_info=True)
+#     try:
+#         while True:
+#             main_etl_cycle()
+#             logging.info(f"--- Cycle complete. Waiting for {PROCESSING_INTERVAL_SECONDS} seconds... ---\n")
+#             time.sleep(PROCESSING_INTERVAL_SECONDS)
+#     except KeyboardInterrupt:
+#         logging.warning("Process stopped by user. Exiting.")
+#     except Exception:
+#         logging.critical("An unexpected critical error occurred in the main loop.", exc_info=True)

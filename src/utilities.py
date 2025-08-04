@@ -124,3 +124,5 @@ def create_database_and_schema():
     finally:
         if conn:
             conn.close()
+
+# create_database_and_schema()

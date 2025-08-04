@@ -32,3 +32,9 @@ data_cache.feather
 .rendered_stock_data.html
 private_key.pem
 public_key.pem
+
+
+# production scripts
+*.sh
+*.txt
+_production/

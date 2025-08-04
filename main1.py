@@ -3,9 +3,6 @@ import threading
 import time
 import logging
 from dotenv import load_dotenv
-
-# --- Corrected Imports ---
-# These imports match the function names in your modules.
 from src.getlivedata import run_continuous_scraper
 from src.processlivedata import main_etl_cycle
 from src.utilities import setup_logging

@@ -38,3 +38,8 @@ public_key.pem
 *.sh
 *.txt
 _production/
+
+# Documentation that must never leave pc
+documentation/
+*.pdf
+*.drawio

@@ -4,6 +4,8 @@ from psycopg2 import OperationalError, Error
 import os
 from dotenv import load_dotenv
 import psycopg2
+import datetime
+from render import NAIROBI_TZ
 
 
 # --- LOGGING SETUP ---
@@ -125,4 +127,17 @@ def create_database_and_schema():
         if conn:
             conn.close()
 
-# create_database_and_schema()
+def market_status():
+    # This function determines the market status based on the current time.
+    now = datetime.datetime.now(NAIROBI_TZ)
+    if now.weekday() < 5:  # Monday to Friday
+        if (now.hour == 9 and now.minute < 30):
+            return "pre-open"
+        elif (now.hour == 9 and now.minute >= 30) or (now.hour > 9 and now.hour < 15):
+            return "open"
+        elif now.hour == 15 and now.minute == 0:
+            return "open"
+        else:
+            return "closed"
+    return "closed"
+

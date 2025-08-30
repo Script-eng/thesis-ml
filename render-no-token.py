@@ -6,6 +6,7 @@ from sqlalchemy import create_engine
 import pandas as pd
 import numpy as np
 import pytz
+from src.utilities import market_status
 
 # --- FLASK APP INITIALIZATION ---
 app = Flask(__name__)
@@ -100,14 +101,17 @@ def get_stock_data_api():
     latest_time_object = max(item['time'] for item in stock_data if item['time'])
     timestamp = latest_time_object.astimezone(NAIROBI_TZ) if latest_time_object else None
 
-    return jsonify({
-        "status": "pre-open",
-        # "status": "open",
-        # "status": "pre",
-        # "status": "closed",
+
+    # Processing market status and returning as JSON file
+    market_status_result = market_status()
+
+    response = {
+        "status": market_status_result,
         "data_timestamp": timestamp.isoformat() if timestamp else None,
         "data": stock_data
-    })
+    }
+
+    return jsonify(response)
 
 if __name__ == '__main__':
     print("--- Flask API Server (JWT temporarily disabled + CORS enabled) ---")

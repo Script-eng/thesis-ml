@@ -5,7 +5,10 @@ import os
 from dotenv import load_dotenv
 import psycopg2
 import datetime
-from render import NAIROBI_TZ
+# from render import NAIROBI_TZ
+import pytz
+
+NAIROBI_TZ = pytz.timezone('Africa/Nairobi')
 
 
 # --- LOGGING SETUP ---

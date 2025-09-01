@@ -7,9 +7,13 @@ from sqlalchemy import create_engine
 import pandas as pd
 import numpy as np
 import pytz
+from flask_cors import CORS
+from src.utilities import market_status
 
 # --- FLASK APP INITIALIZATION ---
 app = Flask(__name__)
+CORS(app, resources={r"/*": {"origins": "*"}})  # 🌐 Enable CORS for all routes
+# CORS(app, resources={r"/*": {"origins": "http://192.168.0.147:8080"}})
 
 # --- LOAD KEYS FROM FILES ---
 try:
@@ -103,12 +107,16 @@ def get_stock_data_api():
     
     # The value is already a datetime object, so we just convert its timezone
     timestamp = latest_time_object.astimezone(NAIROBI_TZ) if latest_time_object else None
+    # Processing market status and returning as JSON file
+    market_status_result = market_status()
 
-    return jsonify({
-        "status": "live",
+    response = {
+        "status": market_status_result,
         "data_timestamp": timestamp.isoformat() if timestamp else None,
         "data": stock_data
-    })
+    }
+
+    return jsonify(response)
 
 if __name__ == '__main__':
     print("--- Flask JWT-Secured API Server ---")

@@ -13,7 +13,8 @@ from flask import Response
 
 # --- FLASK APP INITIALIZATION ---
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": "127.0.0.1, http://192.168.0.147:8080"}})  # 🌐 Enable CORS for all routes
+# CORS(app, resources={r"/*": {"origins": "127.0.0.1, http://192.168.0.147:8080"}})  # 🌐 Enable CORS for all routes
+CORS(app, resources={r"/*": {"origins": "*"}})  # 🌐 Enable CORS for all routes
 
 # --- LOAD KEYS FROM FILES ---
 try:

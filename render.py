@@ -9,11 +9,11 @@ import numpy as np
 import pytz
 from flask_cors import CORS
 from src.utilities import market_status
+from flask import Response
 
 # --- FLASK APP INITIALIZATION ---
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": "*"}})  # 🌐 Enable CORS for all routes
-# CORS(app, resources={r"/*": {"origins": "http://192.168.0.147:8080"}})
+CORS(app, resources={r"/*": {"origins": "127.0.0.1, http://192.168.0.147:8080"}})  # 🌐 Enable CORS for all routes
 
 # --- LOAD KEYS FROM FILES ---
 try:
@@ -60,7 +60,41 @@ def fetch_latest_data_from_db():
 # --- FLASK ROUTES ---
 @app.route('/')
 def index():
-    return render_template('index.html')
+    message = r"""
+
+"In the beginning" : "there was data."
+
+
+
+
+
+ ▗▄▄▖ ▗▄▖ ▗▄▄▄▖▗▄▄▄▖▗▖ ▗▖ ▗▄▖ ▗▄▄▖ ▗▄▄▄▖    
+▐▌   ▐▌ ▐▌▐▌     █  ▐▌ ▐▌▐▌ ▐▌▐▌ ▐▌▐▌       
+ ▝▀▚▖▐▌ ▐▌▐▛▀▀▘  █  ▐▌ ▐▌▐▛▀▜▌▐▛▀▚▖▐▛▀▀▘    
+▗▄▄▞▘▝▚▄▞▘▐▌     █  ▐▙█▟▌▐▌ ▐▌▐▌ ▐▌▐▙▄▄▖    
+                                            
+                                            
+                                            
+▗▄▄▖ ▗▖ ▗▖▗▖    ▗▄▄▖▗▄▄▄▖ ▗▄▄▖              
+▐▌ ▐▌▐▌ ▐▌▐▌   ▐▌   ▐▌   ▐▌                 
+▐▛▀▘ ▐▌ ▐▌▐▌    ▝▀▚▖▐▛▀▀▘ ▝▀▚▖              
+▐▌   ▝▚▄▞▘▐▙▄▄▖▗▄▄▞▘▐▙▄▄▖▗▄▄▞▘              
+                                            
+                                            
+                                                                                                                
+
+
+
+
+
+
+
+
+
+
+Digital Art by [Nyabuto]
+"""
+    return Response(message, mimetype='text/plain')
 
 @app.route('/auth/token', methods=['POST'])
 def generate_token():

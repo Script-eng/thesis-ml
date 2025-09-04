@@ -2,7 +2,7 @@
 
 import datetime
 import jwt
-from flask import Flask, render_template, jsonify, request
+from flask import Flask, jsonify, request
 from sqlalchemy import create_engine
 import pandas as pd
 import numpy as np
@@ -10,6 +10,8 @@ import pytz
 from flask_cors import CORS
 from src.utilities import market_status
 from flask import Response
+from dotenv import load_dotenv
+import os
 
 # --- FLASK APP INITIALIZATION ---
 app = Flask(__name__)
@@ -26,15 +28,15 @@ try:
 except FileNotFoundError:
     print("❌ ERROR: private_key.pem or public_key.pem not found.")
     exit()
-
+load_dotenv()  # Load environment variables from .env file
 # --- DATABASE CONFIGURATION ---
-DB_NAME = "nse"
-DB_USER = "postgres"
-DB_PASS = "secret"
-DB_HOST = "localhost"
-DB_PORT = "5432"
-TABLE_NAME = "stocksdata"
-NAIROBI_TZ = pytz.timezone('Africa/Nairobi')
+DB_NAME = os.getenv("DB_NAME")
+DB_USER = os.getenv("DB_USER")
+DB_PASS = os.getenv("DB_PASS")
+DB_HOST = os.getenv("DB_HOST")
+DB_PORT = os.getenv("DB_PORT")
+TABLE_NAME = os.getenv("TABLE_NAME")
+TZ = os.getenv("TZ")
 
 # --- DATABASE CONNECTION ---
 DATABASE_URI = f"postgresql+psycopg2://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"

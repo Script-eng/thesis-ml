@@ -28,6 +28,8 @@ try:
 except FileNotFoundError:
     print("❌ ERROR: private_key.pem or public_key.pem not found.")
     exit()
+
+
 load_dotenv()  # Load environment variables from .env file
 # --- DATABASE CONFIGURATION ---
 DB_NAME = os.getenv("DB_NAME")
@@ -95,7 +97,6 @@ def index():
 
 
 
-Digital Art by [Nyabuto]
 """
     return Response(message, mimetype='text/plain')
 

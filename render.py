@@ -91,12 +91,6 @@ def index():
 
 
 
-
-
-
-
-
-
 """
     return Response(message, mimetype='text/plain')
 

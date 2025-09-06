@@ -141,7 +141,9 @@ def get_stock_data_api():
 @app.route('/api/status', methods=['GET'])
 @auth_required
 def get_market_status_api():
+    # market_status_value = 'open' # Debugging line
     return jsonify({"status": market_status()})
+    # return jsonify({"status": market_status_value})  # Debugging line
 
 
 @app.route('/api/symbols', methods=['GET'])

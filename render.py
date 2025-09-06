@@ -131,7 +131,7 @@ def get_stock_data_api():
     timestamp = latest_time_object.astimezone(NAIROBI_TZ) if latest_time_object else None
 
     response = {
-        "status": market_status(),
+        # "status": market_status(), #No longer needed because it has its own endpoint
         "data_timestamp": timestamp.isoformat() if timestamp else None,
         "data": stock_data
     }

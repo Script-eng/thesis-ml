@@ -74,7 +74,7 @@ class DailyDataAggregator:
 
             # Build query
             if symbol:
-                symbol_filter = f"WHERE symbol = '{symbol}'"
+                symbol_filter = f"symbol = '{symbol}' AND"
             else:
                 symbol_filter = ""
 
@@ -92,8 +92,7 @@ class DailyDataAggregator:
                         ORDER BY time DESC
                     ) as rn
                 FROM stocksdata
-                {symbol_filter}
-                WHERE time >= NOW() - INTERVAL '{days_back} days'
+                WHERE {symbol_filter} time >= NOW() - INTERVAL '{days_back} days'
             )
             SELECT
                 symbol,

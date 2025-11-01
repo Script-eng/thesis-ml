@@ -83,11 +83,10 @@ class DailyDataAggregator:
                 SELECT
                     symbol,
                     DATE(time AT TIME ZONE 'Africa/Nairobi') as trading_date,
-                    time AT TIME ZONE 'Africa/Nairobi' as local_time,
                     latest_price,
-                    volume,
                     high,
                     low,
+                    volume,
                     ROW_NUMBER() OVER (
                         PARTITION BY symbol, DATE(time AT TIME ZONE 'Africa/Nairobi')
                         ORDER BY time DESC
@@ -99,13 +98,12 @@ class DailyDataAggregator:
             SELECT
                 symbol,
                 trading_date,
-                latest_price as close_price,
+                MAX(CASE WHEN rn = 1 THEN latest_price END) as close_price,
                 MAX(high) as daily_high,
                 MIN(low) as daily_low,
                 SUM(volume) as daily_volume
             FROM daily_data
-            WHERE rn = 1  -- Last price of the day (closing price)
-            GROUP BY symbol, trading_date, latest_price
+            GROUP BY symbol, trading_date
             ORDER BY symbol, trading_date;
             """
 

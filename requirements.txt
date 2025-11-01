@@ -1,0 +1,34 @@
+# Core Dependencies
+jwt
+flask
+sqlalchemy
+pandas
+dotenv
+psycopg2
+selenium
+requests
+
+# Data Processing & Analysis
+numpy
+scipy
+scikit-learn
+pytz
+
+# Deep Learning (TensorFlow & Keras)
+tensorflow>=2.13.0
+keras
+
+# Time Series Forecasting
+prophet
+cmdstanpy
+
+# Utilities
+joblib
+python-dotenv
+beautifulsoup4
+lxml
+
+# Visualization (optional but recommended for thesis)
+matplotlib
+seaborn
+plotly

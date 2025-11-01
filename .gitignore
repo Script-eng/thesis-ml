@@ -37,7 +37,14 @@ public_key.pem
 # production scripts
 *.sh
 *.txt
+!requirements.txt
 _production/
+
+# ML models and results
+models/
+results/
+*.pkl
+*.h5
 
 # Documentation that must never leave pc
 documentation/

@@ -1,12 +1,3 @@
-"""
-CSV Data Importer for NSE Stock Market Data
-============================================
-Imports historical CSV data into PostgreSQL database.
-
-Usage:
-    python import_csv_data.py /path/to/data.csv
-    python import_csv_data.py /Users/lesalon/Desktop/fn/data-*.csv
-"""
 
 import os
 import sys

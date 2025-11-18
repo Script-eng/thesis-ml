@@ -25,7 +25,7 @@ LOG_FILENAME = os.getenv("LOG_FILENAME")
 PROCESSING_INTERVAL_SECONDS = int(os.getenv("PROCESSING_INTERVAL_SECONDS", "30"))
 
 
-# --- PARSE & TRANSFORM FUNCTION (Identical to your original) ---
+
 def parse_local_html_file(html_filepath: str):
     """Parses a locally saved HTML file to extract and clean stock data."""
     try:
@@ -102,9 +102,9 @@ def insert_stock_data(conn, df):
         conn.commit()
 
 
-# --- MAIN EXECUTION LOOP ---
+
 def main_etl_cycle():
-    """Performs one full cycle of parsing and loading."""
+    
     logging.info("--- Starting ETL cycle ---")
     
     stock_df = parse_local_html_file(HTML_FILE_PATH)
@@ -133,18 +133,3 @@ def main_etl_cycle():
             logging.info("Database connection closed for this cycle.")
 
 
-# if __name__ == "__main__":
-#     setup_logging(LOG_FILENAME)
-#     logging.info("--- Continuous TimescaleDB ETL Process Started ---")
-#     logging.info(f"Watching '{HTML_FILE_PATH}' and loading to DB every {PROCESSING_INTERVAL_SECONDS} seconds.")
-#     logging.info("Press Ctrl+C to stop.")
-
-#     try:
-#         while True:
-#             main_etl_cycle()
-#             logging.info(f"--- Cycle complete. Waiting for {PROCESSING_INTERVAL_SECONDS} seconds... ---\n")
-#             time.sleep(PROCESSING_INTERVAL_SECONDS)
-#     except KeyboardInterrupt:
-#         logging.warning("Process stopped by user. Exiting.")
-#     except Exception:
-#         logging.critical("An unexpected critical error occurred in the main loop.", exc_info=True)

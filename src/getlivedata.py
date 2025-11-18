@@ -9,6 +9,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import os
 from dotenv import load_dotenv
+from inject_predictions import process_html_with_predictions
 # from utilities import setup_logging
 
 
@@ -79,6 +80,13 @@ def run_continuous_scraper(url: str, output_filename: str, interval: int):
                     f.write(rendered_html)
 
                 logging.info(f"Successfully saved rendered HTML to '{output_filename}'.")
+
+                # Inject predictions into the HTML
+                try:
+                    logging.info("Injecting ML predictions into HTML...")
+                    process_html_with_predictions()
+                except Exception as pred_error:
+                    logging.warning(f"Could not inject predictions: {pred_error}")
 
             except Exception as e:
                 logging.error(f"A non-fatal error occurred during the scrape cycle: {e}")

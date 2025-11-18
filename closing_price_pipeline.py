@@ -1,11 +1,4 @@
-"""
-NSE Stock Closing Price Prediction Pipeline
-============================================
-Predicts next day's closing price using LSTM, RNN, and Prophet models.
 
-Author: Thesis Project
-Date: November 2025
-"""
 
 import os
 import warnings
@@ -374,7 +367,7 @@ class ProphetPredictor:
 
     def train(self, df_daily, test_size=0.2):
         """Train Prophet model."""
-        # Prepare data for Prophet (requires 'ds' and 'y' columns)
+        
         prophet_df = pd.DataFrame({
             'ds': df_daily['trading_date'],
             'y': df_daily['close_price']

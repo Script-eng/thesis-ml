@@ -17,7 +17,7 @@ For all symbols:
 import argparse
 import os
 import sys
-from datetime import datetime
+from datetime import datetime, timedelta
 from closing_price_pipeline import (
     DailyDataAggregator,
     LSTMPredictor,
@@ -27,8 +27,11 @@ from closing_price_pipeline import (
 )
 import logging
 from dotenv import load_dotenv
+import psycopg2
+import pytz
 
 load_dotenv()
+NAIROBI_TZ = pytz.timezone('Africa/Nairobi')
 
 # Setup logging
 logging.basicConfig(
@@ -36,6 +39,39 @@ logging.basicConfig(
     format='%(asctime)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
+
+
+def save_predictions_to_db(db_config, symbol, lstm_pred, rnn_pred, prophet_pred):
+    """Save predictions to ml_predictions table."""
+    conn = psycopg2.connect(**db_config)
+    cursor = conn.cursor()
+
+    trading_date = (datetime.now(NAIROBI_TZ) + timedelta(days=1)).date()
+    ensemble_pred = (lstm_pred + rnn_pred + prophet_pred) / 3
+
+    query = """
+    INSERT INTO ml_predictions
+    (symbol, trading_date, predicted_close, lstm_pred, rnn_pred, prophet_pred, ensemble_pred, model_version)
+    VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+    ON CONFLICT (symbol, trading_date)
+    DO UPDATE SET
+        predicted_close = EXCLUDED.predicted_close,
+        lstm_pred = EXCLUDED.lstm_pred,
+        rnn_pred = EXCLUDED.rnn_pred,
+        prophet_pred = EXCLUDED.prophet_pred,
+        ensemble_pred = EXCLUDED.ensemble_pred,
+        prediction_time = NOW()
+    """
+
+    cursor.execute(query, (
+        symbol, trading_date, ensemble_pred,
+        lstm_pred, rnn_pred, prophet_pred, ensemble_pred,
+        'v1.0'
+    ))
+
+    conn.commit()
+    cursor.close()
+    conn.close()
 
 
 def main():
@@ -107,9 +143,10 @@ def main():
 
         df_symbol = df_all[df_all['symbol'] == symbol].sort_values('trading_date')
 
-        # Check data availability
-        if len(df_symbol) < 60:
-            logger.warning(f"Insufficient data for {symbol} ({len(df_symbol)} days). Need at least 60 days. Skipping.")
+        # Check data availability - reduced to 35 days minimum
+        min_days = args.lookback + 5  # lookback + small buffer
+        if len(df_symbol) < min_days:
+            logger.warning(f"Insufficient data for {symbol} ({len(df_symbol)} days). Need at least {min_days} days. Skipping.")
             failed += 1
             continue
 
@@ -152,6 +189,16 @@ def main():
 
             best_model = comparator.get_best_model(symbol, metric='RMSE')
             logger.info(f"\n  Best Model (by RMSE): {best_model}")
+
+            # Save predictions to database
+            try:
+                save_predictions_to_db(
+                    DB_CONFIG, symbol,
+                    lstm_prediction, rnn_prediction, prophet_prediction
+                )
+                logger.info("✅ Predictions saved to database")
+            except Exception as db_error:
+                logger.warning(f"Could not save to database: {db_error}")
 
             successful += 1
 

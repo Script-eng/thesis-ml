@@ -473,6 +473,131 @@ class ModelComparator:
         logger.info(f"Model comparison results saved to {path}/model_comparison.csv")
 
 
+class PredictionSaver:
+    """Save predictions to database for serving via API."""
+
+    def __init__(self, db_config):
+        self.db_config = db_config
+
+    def save_prediction(self, symbol, current_price, predictions_dict, prediction_date=None):
+        """
+        Save model predictions to ml_predictions table.
+
+        Args:
+            symbol: Stock symbol (e.g., 'SCOM')
+            current_price: Current market price
+            predictions_dict: Dictionary with model predictions
+                {
+                    'lstm': {'prediction': 29.75, 'confidence': 0.865},
+                    'rnn': {'prediction': 29.60, 'confidence': 0.812},
+                    'prophet': {'prediction': 29.80, 'confidence': 0.654}
+                }
+            prediction_date: Date being predicted (defaults to today)
+
+        Returns:
+            bool: Success status
+        """
+        if prediction_date is None:
+            prediction_date = datetime.now(NAIROBI_TZ).date()
+
+        try:
+            conn = psycopg2.connect(**self.db_config)
+            cursor = conn.cursor()
+
+            # Extract predictions
+            lstm = predictions_dict.get('lstm', {})
+            rnn = predictions_dict.get('rnn', {})
+            prophet = predictions_dict.get('prophet', {})
+
+            # Calculate ensemble prediction (weighted by confidence)
+            total_weight = 0
+            weighted_sum = 0
+
+            for model_data in [lstm, rnn, prophet]:
+                if model_data.get('prediction') and model_data.get('confidence'):
+                    weight = model_data['confidence']
+                    weighted_sum += model_data['prediction'] * weight
+                    total_weight += weight
+
+            ensemble_pred = weighted_sum / total_weight if total_weight > 0 else None
+            ensemble_conf = total_weight / 3 if total_weight > 0 else None  # Average confidence
+
+            # Determine trading signal
+            if ensemble_pred and current_price:
+                pct_diff = ((ensemble_pred - current_price) / current_price) * 100
+                if pct_diff > 1.0:  # More than 1% upside
+                    signal = 'BUY'
+                elif pct_diff < -1.0:  # More than 1% downside
+                    signal = 'SELL'
+                else:
+                    signal = 'HOLD'
+            else:
+                signal = 'HOLD'
+
+            # Insert or update prediction (matching actual table schema)
+            query = """
+            INSERT INTO ml_predictions (
+                symbol, trading_date, current_price,
+                lstm_pred, lstm_confidence,
+                rnn_pred, rnn_confidence,
+                prophet_pred, prophet_confidence,
+                ensemble_pred, ensemble_confidence,
+                predicted_close, signal, model_version, prediction_time
+            ) VALUES (
+                %s, %s, %s,
+                %s, %s,
+                %s, %s,
+                %s, %s,
+                %s, %s,
+                %s, %s, %s, NOW()
+            )
+            ON CONFLICT (symbol, trading_date)
+            DO UPDATE SET
+                current_price = EXCLUDED.current_price,
+                lstm_pred = EXCLUDED.lstm_pred,
+                lstm_confidence = EXCLUDED.lstm_confidence,
+                rnn_pred = EXCLUDED.rnn_pred,
+                rnn_confidence = EXCLUDED.rnn_confidence,
+                prophet_pred = EXCLUDED.prophet_pred,
+                prophet_confidence = EXCLUDED.prophet_confidence,
+                ensemble_pred = EXCLUDED.ensemble_pred,
+                ensemble_confidence = EXCLUDED.ensemble_confidence,
+                predicted_close = EXCLUDED.predicted_close,
+                signal = EXCLUDED.signal,
+                prediction_time = NOW()
+            """
+
+            # Convert numpy types to Python native types
+            def to_python(val):
+                if val is None:
+                    return None
+                # Handle numpy types
+                if hasattr(val, 'item'):
+                    return float(val.item())
+                return float(val) if isinstance(val, (int, float, np.number)) else val
+
+            cursor.execute(query, (
+                symbol, prediction_date, to_python(current_price),
+                to_python(lstm.get('prediction')), to_python(lstm.get('confidence')),
+                to_python(rnn.get('prediction')), to_python(rnn.get('confidence')),
+                to_python(prophet.get('prediction')), to_python(prophet.get('confidence')),
+                to_python(ensemble_pred), to_python(ensemble_conf),
+                to_python(ensemble_pred),  # predicted_close = ensemble_pred
+                signal, 'v1.0'
+            ))
+
+            conn.commit()
+            cursor.close()
+            conn.close()
+
+            logger.info(f"✅ Saved prediction for {symbol}: {ensemble_pred:.2f} (signal: {signal})")
+            return True
+
+        except Error as e:
+            logger.error(f"Error saving prediction for {symbol}: {e}")
+            return False
+
+
 if __name__ == "__main__":
     # Configuration
     DB_CONFIG = {
